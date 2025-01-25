@@ -1,4 +1,5 @@
 import 'package:ecgdisplay/wavectrl.dart';
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -59,6 +60,70 @@ class WaveDisp extends StatelessWidget {
                         backgroundColor: Colors.grey[300],
                       );
                     }
+                  }),
+                  const SizedBox(height: 20),
+                  Obx(() {
+                    final timeStep =
+                        wavctrl.sec.value / wavctrl.acquiredData.length;
+                    return SizedBox(
+                      height: 300, // Adjust height as needed
+                      child: LineChart(
+                        LineChartData(
+                          gridData: FlGridData(show: true),
+                          titlesData: FlTitlesData(
+                            leftTitles: AxisTitles(
+                              sideTitles: SideTitles(
+                                showTitles: true,
+                                interval: 10,
+                                reservedSize: 40,
+                                getTitlesWidget: (value, meta) => Text(
+                                  value.toString(),
+                                  style: const TextStyle(
+                                    color: Colors.black,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            bottomTitles: AxisTitles(
+                              sideTitles: SideTitles(
+                                showTitles: true,
+                                reservedSize: 22,
+                                interval: wavctrl.sec.value / 5,
+                                getTitlesWidget: (value, meta) => Text(
+                                  value.toString(),
+                                  style: const TextStyle(
+                                    color: Colors.black,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          borderData: FlBorderData(show: true),
+                          lineBarsData: [
+                            LineChartBarData(
+                              isCurved: true,
+                              color: Colors.blue,
+                              spots: wavctrl.acquiredData
+                                  .asMap()
+                                  .entries
+                                  .map((entry) {
+                                final x = entry.key *
+                                    timeStep; // Convert index to time.
+                                final y = entry.value;
+
+                                return FlSpot(x, y);
+                              }).toList(),
+                              dotData: FlDotData(show: false),
+                              belowBarData: BarAreaData(show: false),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
                   }),
                 ],
               ),
