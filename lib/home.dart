@@ -1,4 +1,5 @@
 import 'package:ecgdisplay/bltctrl.dart';
+import 'package:ecgdisplay/realtime.dart';
 import 'package:ecgdisplay/wavedisp.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -35,7 +36,7 @@ class HomeScreen extends StatelessWidget {
                   const SizedBox(height: 10),
                   // Data display with proper Obx wrapping
                   Obx(() => Text(
-                        blc.receivedData.value ?? "No value received",
+                        blc.receivedData.value,
                       )),
                   const SizedBox(height: 10),
                   // Connection state and acquisition button
@@ -57,6 +58,13 @@ class HomeScreen extends StatelessWidget {
                             onPressed: () => Get.to(() => const WaveDisp()),
                             child: const Text("Start Acquisition"),
                           ),
+                          const SizedBox(height: 20),
+                          TextButton(
+                            child: Text("View realtime data"),
+                            onPressed: () => Get.to(
+                              () => const RealTimeDisplay(),
+                            ),
+                          )
                         ],
                       ],
                     );
