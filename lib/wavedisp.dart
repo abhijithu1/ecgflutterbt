@@ -11,9 +11,7 @@ class WaveDisp extends StatelessWidget {
     final wavctrl = Get.find<WaveController>();
     return Scaffold(
         appBar: AppBar(
-          title: Text(
-            "Display Wave",
-          ),
+          title: const Text("Display Wave"),
         ),
         body: CustomScrollView(
           slivers: [
@@ -21,14 +19,12 @@ class WaveDisp extends StatelessWidget {
                 delegate: SliverChildListDelegate([
               Column(
                 children: [
-                  Text("Enter time for acquisition: "),
-                  SizedBox(
-                    height: 20,
-                  ),
+                  const Text("Enter time for acquisition: "),
+                  const SizedBox(height: 20),
                   TextField(
                     controller: wavctrl.time1.value,
                     decoration: InputDecoration(
-                      hintText: "Type a message",
+                      hintText: "Type acquisition duration (seconds)",
                       filled: true,
                       fillColor: const Color.fromARGB(255, 238, 255, 253),
                       contentPadding: const EdgeInsets.symmetric(
@@ -39,91 +35,88 @@ class WaveDisp extends StatelessWidget {
                       ),
                     ),
                   ),
-                  SizedBox(
-                    height: 15,
-                  ),
+                  const SizedBox(height: 15),
                   TextButton(
-                    child: Text("Submit"),
+                    child: const Text("Submit"),
                     onPressed: () {
                       wavctrl.settime();
                     },
                   ),
-                  SizedBox(height: 20),
+                  const SizedBox(height: 20),
                   Obx(() {
                     if (wavctrl.sec.value == 0) {
-                      return Text("Enter a nonzero number");
+                      return const Text("Enter a nonzero number");
                     } else {
                       return CircularProgressIndicator(
                         value: wavctrl.progress.value,
                         strokeWidth: 8,
-                        valueColor: AlwaysStoppedAnimation(Colors.blue),
+                        valueColor: const AlwaysStoppedAnimation(Colors.blue),
                         backgroundColor: Colors.grey[300],
                       );
                     }
                   }),
                   const SizedBox(height: 20),
+                  // Line graph section
                   Obx(() {
-                    final timeStep =
-                        wavctrl.sec.value / wavctrl.acquiredData.length;
-                    return SizedBox(
-                      height: 300, // Adjust height as needed
-                      child: LineChart(
-                        LineChartData(
-                          gridData: FlGridData(show: true),
-                          titlesData: FlTitlesData(
-                            leftTitles: AxisTitles(
-                              sideTitles: SideTitles(
-                                showTitles: true,
-                                interval: 10,
-                                reservedSize: 40,
-                                getTitlesWidget: (value, meta) => Text(
-                                  value.toString(),
-                                  style: const TextStyle(
-                                    color: Colors.black,
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold,
+                    if (wavctrl.acquiredData.isEmpty) {
+                      return const Text("No data acquired yet.");
+                    } else {
+                      return SizedBox(
+                        height: 300, // Adjust height as needed
+                        child: LineChart(
+                          LineChartData(
+                            gridData: FlGridData(show: true),
+                            titlesData: FlTitlesData(
+                              leftTitles: AxisTitles(
+                                sideTitles: SideTitles(
+                                  showTitles: true,
+                                  interval: 10,
+                                  reservedSize: 40,
+                                  getTitlesWidget: (value, meta) => Text(
+                                    value.toString(),
+                                    style: const TextStyle(
+                                        color: Colors.black,
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold),
+                                  ),
+                                ),
+                              ),
+                              bottomTitles: AxisTitles(
+                                sideTitles: SideTitles(
+                                  showTitles: true,
+                                  reservedSize: 22,
+                                  interval: 10,
+                                  getTitlesWidget: (value, meta) => Text(
+                                    value.toString(),
+                                    style: const TextStyle(
+                                        color: Colors.black,
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold),
                                   ),
                                 ),
                               ),
                             ),
-                            bottomTitles: AxisTitles(
-                              sideTitles: SideTitles(
-                                showTitles: true,
-                                reservedSize: 22,
-                                interval: wavctrl.sec.value / 5,
-                                getTitlesWidget: (value, meta) => Text(
-                                  value.toString(),
-                                  style: const TextStyle(
-                                    color: Colors.black,
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
+                            borderData: FlBorderData(show: true),
+                            lineBarsData: [
+                              LineChartBarData(
+                                isCurved: true,
+                                color: Colors.blue,
+                                spots: wavctrl.acquiredData
+                                    .asMap()
+                                    .entries
+                                    .map((entry) {
+                                  final x = entry.key.toDouble();
+                                  final y = entry.value;
+                                  return FlSpot(x, y);
+                                }).toList(),
+                                dotData: FlDotData(show: false),
+                                belowBarData: BarAreaData(show: false),
                               ),
-                            ),
+                            ],
                           ),
-                          borderData: FlBorderData(show: true),
-                          lineBarsData: [
-                            LineChartBarData(
-                              isCurved: true,
-                              color: Colors.blue,
-                              spots: wavctrl.acquiredData
-                                  .asMap()
-                                  .entries
-                                  .map((entry) {
-                                final x = entry.key *
-                                    timeStep; // Convert index to time.
-                                final y = entry.value;
-
-                                return FlSpot(x, y);
-                              }).toList(),
-                              dotData: FlDotData(show: false),
-                              belowBarData: BarAreaData(show: false),
-                            ),
-                          ],
                         ),
-                      ),
-                    );
+                      );
+                    }
                   }),
                 ],
               ),
