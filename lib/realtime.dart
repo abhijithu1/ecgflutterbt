@@ -12,12 +12,12 @@ class LineGraphScreen extends StatefulWidget {
 
 class _LineGraphScreenState extends State<LineGraphScreen> {
   final List<FlSpot> _dataPoints = [];
-  final int _maxVisiblePoints = 50;
+  final int _maxVisiblePoints = 100; // Adjusted to accommodate more data
   final double _timeStep = 0.1;
   final ValueNotifier<List<FlSpot>> _notifier = ValueNotifier([]);
   double _minY = double.infinity;
   double _maxY = double.negativeInfinity;
-  final double _xAxisDuration = 5.0; // 5-second x-axis duration
+  final double _xAxisDuration = 10.0; // 10-second x-axis duration
 
   @override
   void initState() {
@@ -41,7 +41,6 @@ class _LineGraphScreenState extends State<LineGraphScreen> {
           data.split(',').map((e) => double.tryParse(e.trim()) ?? 0.0).toList();
 
       for (var value in values) {
-        // Update min and max Y values dynamically
         _minY = _minY == double.infinity ? value : min(_minY, value);
         _maxY = _maxY == double.negativeInfinity ? value : max(_maxY, value);
 
@@ -56,14 +55,8 @@ class _LineGraphScreenState extends State<LineGraphScreen> {
         }
       }
 
-      // Add padding to Y-axis range
-      final paddingFactor = 0.1;
-      final dynamicMinY = _minY - (_maxY - _minY) * paddingFactor;
-      final dynamicMaxY = _maxY + (_maxY - _minY) * paddingFactor;
-
-      // Notify listeners to update the graph
       _notifier.value = List<FlSpot>.from(_dataPoints);
-      setState(() {}); // Trigger rebuild to update chart scale
+      setState(() {});
     } catch (e) {
       debugPrint('Error parsing data: $e');
     }
@@ -90,44 +83,61 @@ class _LineGraphScreenState extends State<LineGraphScreen> {
                   );
                 }
 
-                return LineChart(
-                  LineChartData(
-                    gridData: FlGridData(show: true),
-                    titlesData: FlTitlesData(
-                      leftTitles: AxisTitles(
-                        sideTitles: SideTitles(
-                          showTitles: true,
-                          reservedSize: 40,
-                          interval: (_maxY - _minY) / 5,
-                        ),
+                // Calculate intervals dynamically
+                final double yInterval = ((_maxY - _minY) / 5).clamp(1, 100);
+                final double xInterval = (_xAxisDuration / 5);
+
+                return Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: LineChart(
+                    LineChartData(
+                      gridData: FlGridData(
+                        show: true,
+                        horizontalInterval: yInterval,
+                        verticalInterval: xInterval,
                       ),
-                      bottomTitles: AxisTitles(
-                        sideTitles: SideTitles(
-                          showTitles: true,
-                          interval: _xAxisDuration / 5,
-                          getTitlesWidget: (value, meta) => Text(
-                            '${value.toStringAsFixed(1)}s',
-                            style: const TextStyle(
-                              color: Colors.black,
-                              fontSize: 10,
+                      titlesData: FlTitlesData(
+                        leftTitles: AxisTitles(
+                          sideTitles: SideTitles(
+                            showTitles: true,
+                            reservedSize: 40,
+                            interval: yInterval,
+                            getTitlesWidget: (value, meta) => Text(
+                              '${value.toStringAsFixed(1)}',
+                              style: const TextStyle(fontSize: 10),
+                            ),
+                          ),
+                        ),
+                        bottomTitles: AxisTitles(
+                          sideTitles: SideTitles(
+                            showTitles: true,
+                            interval: xInterval,
+                            getTitlesWidget: (value, meta) => Text(
+                              '${value.toStringAsFixed(1)}s',
+                              style: const TextStyle(fontSize: 10),
                             ),
                           ),
                         ),
                       ),
+                      borderData: FlBorderData(show: true),
+                      lineBarsData: [
+                        LineChartBarData(
+                          isCurved: true,
+                          color: Colors.blue,
+                          spots: dataPoints,
+                          dotData: FlDotData(show: false),
+                          belowBarData: BarAreaData(show: false),
+                        ),
+                      ],
+                      minX: dataPoints.isNotEmpty
+                          ? dataPoints.last.x - _xAxisDuration
+                          : 0,
+                      maxX: dataPoints.isNotEmpty
+                          ? dataPoints.last.x
+                          : _xAxisDuration,
+                      minY: _minY - (_maxY - _minY) * 0.05, // Reduced padding
+                      maxY: _maxY + (_maxY - _minY) * 0.05,
                     ),
-                    borderData: FlBorderData(show: true),
-                    lineBarsData: [
-                      LineChartBarData(
-                        isCurved: true,
-                        color: Colors.blue,
-                        spots: dataPoints,
-                        dotData: FlDotData(show: false),
-                      ),
-                    ],
-                    minX: 0,
-                    maxX: _xAxisDuration,
-                    minY: _minY - (_maxY - _minY) * 0.1,
-                    maxY: _maxY + (_maxY - _minY) * 0.1,
                   ),
                 );
               },
