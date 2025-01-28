@@ -168,6 +168,9 @@ class WaveDisp extends StatelessWidget {
                 color: primaryBlue,
               ),
             ),
+            wavctrl.startacq.value
+                ? Text("BPM: not found")
+                : Text("BPM: ${wavctrl.bpm}")
           ],
         ),
       );

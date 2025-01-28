@@ -3,9 +3,6 @@ import 'package:newtest/bltctrl.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import 'package:newtest/bltctrl.dart';
 import 'package:newtest/home.dart';
 
 class Scanview extends StatelessWidget {

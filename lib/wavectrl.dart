@@ -2,13 +2,16 @@ import 'dart:async';
 import 'package:newtest/bltctrl.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:newtest/pant.dart';
 
 class WaveController extends GetxController {
   final time1 = TextEditingController().obs;
   final sec = 0.obs;
   final acquiredData = <double>[].obs;
   final progress = 0.0.obs;
-  final receivedDataCounter = 0.obs; // Track number of received data points
+  final receivedDataCounter = 0.obs;
+  final startacq = false.obs; // Added observable acquisition state
+  final bpm = 0.obs;
 
   StreamSubscription? _dataSubscription;
   Timer? progressTimer;
@@ -31,6 +34,8 @@ class WaveController extends GetxController {
     final BLEController blc = Get.find<BLEController>();
     int elapsed = 0;
 
+    startacq.value = true; // Set acquisition state to true when starting
+
     progress.value = 0.0;
     progressTimer?.cancel();
     progressTimer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
@@ -42,7 +47,6 @@ class WaveController extends GetxController {
       }
     });
 
-    // Use stream-based approach for more reliable data capture
     _dataSubscription = blc.txCharacteristic!.lastValueStream.listen((data) {
       if (data.isNotEmpty) {
         try {
@@ -57,7 +61,6 @@ class WaveController extends GetxController {
       }
     });
 
-    // Auto-stop mechanism
     Future.delayed(Duration(seconds: durationInSeconds), () {
       stopAcquisition();
       debugPrint("Total data points received: ${receivedDataCounter.value}");
@@ -65,8 +68,15 @@ class WaveController extends GetxController {
   }
 
   void stopAcquisition() {
+    startacq.value = false; // Set acquisition state to false when stopping
     _dataSubscription?.cancel();
     progressTimer?.cancel();
+
+    // Calculate BPM after data acquisition
+    bpm.value = PanTompkins().calculateBPM(acquiredData);
+    debugPrint("Calculated BPM: $bpm");
+
+    debugPrint("Data acquisition stopped.");
     debugPrint("Data acquisition stopped.");
   }
 

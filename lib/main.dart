@@ -16,6 +16,7 @@ class MyApp extends StatelessWidget {
     final bleController = Get.put(BLEController());
     final wav = Get.put(WaveController());
     return GetMaterialApp(
+      debugShowCheckedModeBanner: false,
       title: "ECG monitor",
       getPages: [
         GetPage(
