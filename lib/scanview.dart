@@ -1,6 +1,12 @@
+import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:newtest/bltctrl.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:newtest/bltctrl.dart';
+import 'package:newtest/home.dart';
 
 class Scanview extends StatelessWidget {
   const Scanview({super.key});
@@ -9,31 +15,127 @@ class Scanview extends StatelessWidget {
   Widget build(BuildContext context) {
     final BLEController blc = Get.find<BLEController>();
     blc.startScan();
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Scanning devices"),
-        actions: [
-          IconButton(
-            onPressed: () async {
-              await blc.startScan();
-              debugPrint("button pressed again");
-            },
-            icon: Icon(
-              Icons.refresh,
-            ),
-          )
-        ],
+      appBar: _buildAppBar(blc),
+      body: Container(
+        color: backgroundGray,
+        child: Obx(() => Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: _buildDeviceList(blc),
+            )),
       ),
-      body: Obx(() => ListView.builder(
-            itemCount: blc.devices.length, // Add this
-            itemBuilder: (context, index) {
-              return ListTile(
-                title:
-                    Text(blc.devices[index].platformName ?? 'Unknown Device'),
-                onTap: () => blc.connectToDevice(blc.devices[index]),
-              );
-            },
-          )),
+    );
+  }
+
+  PreferredSizeWidget _buildAppBar(BLEController blc) {
+    return AppBar(
+      title: const Text("Scanning Devices"),
+      centerTitle: true,
+      flexibleSpace: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [primaryBlue, Color(0xFF153075)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+      ),
+      actions: [
+        IconButton(
+          onPressed: () async {
+            await blc.startScan();
+            debugPrint("Refresh pressed");
+          },
+          icon: Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: cardWhite.withOpacity(0.2),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.refresh_rounded,
+              color: Colors.white,
+              size: 26,
+            ),
+          ),
+        )
+      ],
+    );
+  }
+
+  Widget _buildDeviceList(BLEController blc) {
+    return ListView.separated(
+      physics: const BouncingScrollPhysics(),
+      itemCount: blc.devices.length,
+      separatorBuilder: (context, index) => const SizedBox(height: 12),
+      itemBuilder: (context, index) {
+        final device = blc.devices[index];
+        return _buildDeviceTile(blc, device);
+      },
+    );
+  }
+
+  Widget _buildDeviceTile(BLEController blc, BluetoothDevice device) {
+    return Obx(() {
+      final isConnecting = blc.isConnecting.value;
+      final isConnected =
+          blc.connectionState.value == BluetoothConnectionState.connected;
+
+      return Material(
+        borderRadius: BorderRadius.circular(12),
+        elevation: 2,
+        child: ListTile(
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          tileColor: cardWhite,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          leading: Icon(
+            Icons.devices_rounded,
+            color: primaryBlue,
+            size: 32,
+          ),
+          title: Text(
+            device.platformName ?? 'Unknown Device',
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Colors.black87,
+            ),
+          ),
+          subtitle: Text(
+            device.remoteId.str,
+            style: const TextStyle(
+              fontSize: 12,
+              color: Colors.grey,
+              fontFamily: 'RobotoMono',
+            ),
+          ),
+          trailing: _buildConnectionStatus(isConnecting, isConnected, device),
+          onTap: () => blc.connectToDevice(device),
+        ),
+      );
+    });
+  }
+
+  Widget _buildConnectionStatus(
+      bool isConnecting, bool isConnected, BluetoothDevice device) {
+    if (isConnecting) {
+      return const SizedBox(
+        width: 24,
+        height: 24,
+        child: CircularProgressIndicator(
+          strokeWidth: 2,
+          color: primaryBlue,
+        ),
+      );
+    }
+    return Icon(
+      isConnected ? Icons.check_circle_rounded : Icons.link_rounded,
+      color: isConnected ? accentTeal : Colors.grey,
+      size: 28,
     );
   }
 }

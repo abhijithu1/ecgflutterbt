@@ -8,6 +8,7 @@ class BLEController extends GetxController {
   final devices = <BluetoothDevice>[].obs;
   final connectionState = BluetoothConnectionState.disconnected.obs;
   final receivedData = ''.obs;
+  final RxBool isConnecting = false.obs;
 
   BluetoothDevice? selectedDevice;
   BluetoothCharacteristic? txCharacteristic;
