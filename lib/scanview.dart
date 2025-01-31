@@ -62,12 +62,18 @@ class Scanview extends StatelessWidget {
   }
 
   Widget _buildDeviceList(BLEController blc) {
+    // Filter devices to only include those with a non-null and non-empty platformName
+    final namedDevices = blc.devices
+        .where((device) =>
+            device.platformName != null && device.platformName!.isNotEmpty)
+        .toList();
+
     return ListView.separated(
       physics: const BouncingScrollPhysics(),
-      itemCount: blc.devices.length,
+      itemCount: namedDevices.length, // Use the filtered list length
       separatorBuilder: (context, index) => const SizedBox(height: 12),
       itemBuilder: (context, index) {
-        final device = blc.devices[index];
+        final device = namedDevices[index]; // Use the filtered list
         return _buildDeviceTile(blc, device);
       },
     );
@@ -78,6 +84,8 @@ class Scanview extends StatelessWidget {
       final isConnecting = blc.isConnecting.value;
       final isConnected =
           blc.connectionState.value == BluetoothConnectionState.connected;
+      final isThisDeviceConnected =
+          isConnected && blc.selectedDevice?.remoteId == device.remoteId;
 
       return Material(
         borderRadius: BorderRadius.circular(12),
@@ -110,7 +118,8 @@ class Scanview extends StatelessWidget {
               fontFamily: 'RobotoMono',
             ),
           ),
-          trailing: _buildConnectionStatus(isConnecting, isConnected, device),
+          trailing: _buildConnectionStatus(
+              isConnecting, isThisDeviceConnected, device),
           onTap: () => blc.connectToDevice(device),
         ),
       );
